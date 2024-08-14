@@ -1,9 +1,13 @@
-"""Plot word counts."""
+"""Plot word counts from csv, calculate exponent alpha of best fit and plot the best-fit line."""
 
 import argparse
 
 import numpy as np
 import pandas as pd
+
+import yaml
+import matplotlib as mpl
+
 from scipy.optimize import minimize_scalar
 
 
@@ -60,8 +64,22 @@ def plot_fit(curve_xmin, curve_xmax, max_rank, alpha, ax):
     ax.loglog(xvals, yvals, color='grey')
 
 
+def set_plot_params(plot_params_file):
+    """Read mpl params from YAML file."""
+    if not plot_params_file:
+        return
+    with open(plot_params_file, 'r') as reader:
+        plot_params = yaml.load(reader, Loader=yaml.BaseLoader)
+        for param, value in plot_params.items():
+            mpl.rcParams[param] = value
+
+
 def main(args):
     """Run the command line program."""
+
+    set_plot_params(args.plotparams)
+
+    # Read into pandas
     df = pd.read_csv(args.infile, header=None,
                      names=('word', 'word_frequency'))
     df['rank'] = df['word_frequency'].rank(ascending=False,
@@ -72,6 +90,7 @@ def main(args):
                          grid=True,
                          xlim=args.xlim)
 
+    # Compute best-fit exponent
     word_counts = df['word_frequency'].to_numpy()
     alpha = get_power_law_params(word_counts)
     print('alpha:', alpha)
@@ -85,6 +104,7 @@ def main(args):
     curve_xmin = df['word_frequency'].min()
     curve_xmax = df['word_frequency'].max()
 
+    # Plot and save to outfile
     plot_fit(curve_xmin, curve_xmax, max_rank, alpha, ax)
     ax.figure.savefig(args.outfile)
 
@@ -100,5 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--xlim', type=float, nargs=2,
                         metavar=('XMIN', 'XMAX'),
                         default=None, help='X-axis limits')
+    parser.add_argument('--plotparams', type=str, default=None,
+                        help='matplotlib parameters (YAML file)')
     args = parser.parse_args()
     main(args)

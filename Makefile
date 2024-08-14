@@ -17,8 +17,8 @@ results/collated.csv : $(RESULTS) $(COLLATE)
 	python $(COLLATE) $(RESULTS) > $@
 	
 ## results/collated.png: plot collated results.
-results/collated.png: results/collated.csv
-	python $(PLOT) $< --outfile $@
+results/collated.png: results/collated.csv $(PLOT)
+	python $(PLOT) $< --outfile $@ --plotparams plotparams.yml
 
 ## all: Regenerate all results.
 all : results/collated.png
