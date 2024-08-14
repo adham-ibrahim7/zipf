@@ -1,4 +1,4 @@
-.PHONY : all clean settings help
+.PHONY : all clean settings help results
 
 DATA=$(wildcard data/*.txt)
 RESULTS=$(patsubst data/%.txt, results/%.csv, $(DATA))
@@ -13,6 +13,7 @@ results/%.csv : data/%.txt $(COUNT)
 	
 ## results/collated.csv: collate all results.
 results/collated.csv : $(RESULTS) $(COLLATE)
+	@mkdir -p results
 	python $(COLLATE) $(RESULTS) > $@
 	
 ## results/collated.png: plot collated results.
@@ -21,6 +22,9 @@ results/collated.png: results/collated.csv
 
 ## all: Regenerate all results.
 all : results/collated.png
+
+## results: update only the result csvs, do not collate. (Exercise 9.11.5)
+results: $(RESULTS)
 
 ## clean: Remove all generated files.
 clean :
